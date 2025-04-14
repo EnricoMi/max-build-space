@@ -136,10 +136,12 @@ runs:
 
             echo ::group::Removing $dir
             du -hs "$dir"
-            before=$(df --output=avail -B1MiB "$parent" | tail -n1)
-            elapsed=$(TIME="%e" time sudo rm -rf "$dir")
-            after=$(df --output=avail -B1MiB "$parent" | tail -n1)
-            echo "Total reclaimed space: $((after - before))MB (${before}MB -> ${after}MB) in ${elapsed}s"
+            du_before=$(df --output=avail -B1MiB "$parent" | tail -n1)
+            time_before=$(date +%s)
+            sudo rm -rf "$dir"
+            time_after=$(date +%s)
+            du_after=$(df --output=avail -B1MiB "$parent" | tail -n1)
+            echo "Total reclaimed space: $((du_after - du_before))MB (${du_before}MB -> ${du_after}MB) in ${$(( time_after - time_before ))}s"
             echo ::endgroup::
           }
 
