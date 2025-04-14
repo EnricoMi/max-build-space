@@ -130,10 +130,11 @@ runs:
             parent=$(dirname "$dir")
 
             echo "Removing $dir"
+            du -hs "$dir"
             before=$(df --output=avail -B1MB "$parent" | tail -n1)
             sudo rm -rf "$dir"
             after=$(df --output=avail -B1MB "$parent" | tail -n1)
-            echo "Total reclaimed space: $((after - before))MB"
+            echo "Total reclaimed space: $((after - before))MB (${before}MB -> ${after}MB)"
           }
 
           echo "Removing unwanted software... "
