@@ -129,17 +129,18 @@ runs:
             dir="$1"
             parent=$(dirname "$dir")
 
-            echo "Removing $dir"
             if [ ! -e "$dir" ]; then
-              echo "Path does not exist"
+              echo "Path $dir does not exist"
               return
             fi
 
+            echo ::group::Removing $dir
             du -hs "$dir"
-            before=$(df --output=avail -B1MB "$parent" | tail -n1)
-            sudo rm -rf "$dir"
-            after=$(df --output=avail -B1MB "$parent" | tail -n1)
-            echo "Total reclaimed space: $((after - before))MB (${before}MB -> ${after}MB)"
+            before=$(df --output=avail -B1MiB "$parent" | tail -n1)
+            elapsed=$(TIME="%e" time sudo rm -rf "$dir")
+            after=$(df --output=avail -B1MiB "$parent" | tail -n1)
+            echo "Total reclaimed space: $((after - before))MB (${before}MB -> ${after}MB) in ${elapsed}s"
+            echo ::endgroup::
           }
 
           echo "Removing unwanted software... "
@@ -156,9 +157,12 @@ runs:
             remove /opt/hostedtoolcache/CodeQL
           fi
           if [[ ${{ inputs.remove-docker-images }} == 'true' ]]; then
+            echo ::group::Removing docker images
             sudo docker image prune --all --force
+            echo ::endgroup::
           fi
           if [[ ${{ inputs.remove-large-packages }} == 'true' ]]; then
+            echo ::group::Removing large packages
             sudo apt-get remove -y '^llvm-.*'
             sudo apt-get remove -y 'php.*'
             sudo apt-get remove -y '^mongodb-.*'
@@ -166,6 +170,7 @@ runs:
             sudo apt-get remove -y azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
             sudo apt-get autoremove -y
             sudo apt-get clean
+            echo ::endgroup::
           fi
           # Option: Remove tool cache
           # REF: https://github.com/actions/virtual-environments/issues/2875#issuecomment-1163392159
